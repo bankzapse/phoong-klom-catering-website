@@ -23,10 +23,17 @@ const LOCAL_FILE = path.join(process.cwd(), "data", "content.local.json");
 export const CONTENT_TAG = "site-content";
 
 function getRedis(): Redis | null {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url = process.env.UPSTASH_REDIS_REST_URL?.trim();
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
   if (!url || !token) return null;
-  return new Redis({ url, token });
+  try {
+    // new Redis() throws synchronously on a malformed URL — never let a
+    // mistyped env var crash the whole build/render; fall back to defaults.
+    return new Redis({ url, token });
+  } catch (err) {
+    console.error("Invalid Upstash config, falling back to defaults:", err);
+    return null;
+  }
 }
 
 /** Deep-merge stored content over the defaults so new fields never break old data. */
