@@ -1,21 +1,10 @@
 import type { Metadata } from "next";
-import { Noto_Serif_Thai, Noto_Sans_Thai } from "next/font/google";
 import { getContent } from "@/lib/storage";
 import "./globals.css";
 
-const serif = Noto_Serif_Thai({
-  subsets: ["thai", "latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-serif",
-  display: "swap",
-});
-
-const sans = Noto_Sans_Thai({
-  subsets: ["thai", "latin"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-sans",
-  display: "swap",
-});
+// Fonts are loaded via <link> in <head> (see below) instead of next/font/google
+// so the build has no network dependency on Google Fonts — the font family names
+// are wired up through --font-serif / --font-sans in globals.css.
 
 export async function generateMetadata(): Promise<Metadata> {
   const c = await getContent();
@@ -55,7 +44,15 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="th" className={`${serif.variable} ${sans.variable}`}>
+    <html lang="th">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600&family=Noto+Serif+Thai:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="font-sans antialiased">{children}</body>
     </html>
   );
