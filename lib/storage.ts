@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { unstable_cache } from "next/cache";
 import { Redis } from "@upstash/redis";
 import { defaultContent, type SiteContent } from "./content";
 
@@ -8,10 +9,18 @@ import { defaultContent, type SiteContent } from "./content";
 //  • Production (Vercel): Upstash Redis  (env: UPSTASH_REDIS_REST_URL / _TOKEN)
 //  • Local dev fallback : data/content.local.json
 //  • No storage at all  : returns bundled default content (read-only)
+//
+//  Reads are wrapped in unstable_cache so:
+//   1. static routes (sitemap/robots/not-found) can be generated without
+//      hitting the Upstash no-store fetch at build (no DYNAMIC_SERVER_USAGE)
+//   2. Redis is queried rarely instead of on every page view (cost + speed)
+//  The cache is busted on save via revalidateTag(CONTENT_TAG).
 // ─────────────────────────────────────────────────────────────
 
 const REDIS_KEY = "phoong-klom:content";
 const LOCAL_FILE = path.join(process.cwd(), "data", "content.local.json");
+
+export const CONTENT_TAG = "site-content";
 
 function getRedis(): Redis | null {
   const url = process.env.UPSTASH_REDIS_REST_URL;
@@ -46,7 +55,8 @@ export function storageMode(): StorageMode {
   return "default";
 }
 
-export async function getContent(): Promise<SiteContent> {
+/** Raw, uncached read straight from the source. Use where freshness matters (admin editor). */
+export async function readContent(): Promise<SiteContent> {
   const redis = getRedis();
   if (redis) {
     try {
@@ -70,6 +80,16 @@ export async function getContent(): Promise<SiteContent> {
 
   return defaultContent;
 }
+
+/**
+ * Cached read for public pages, layout metadata, sitemap and robots.
+ * Served from cache until a save calls revalidateTag(CONTENT_TAG); the 1h
+ * revalidate is just a safety net.
+ */
+export const getContent = unstable_cache(readContent, ["site-content"], {
+  tags: [CONTENT_TAG],
+  revalidate: 3600,
+});
 
 export async function saveContent(content: SiteContent): Promise<void> {
   const redis = getRedis();

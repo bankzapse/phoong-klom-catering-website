@@ -10,9 +10,7 @@ import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import JsonLd from "@/components/JsonLd";
 
-// Re-fetch content on every request so CMS edits appear immediately.
-export const dynamic = "force-dynamic";
-
+// Content is served from cache and revalidated on save (see lib/storage.ts).
 export default async function Home() {
   const content = await getContent();
 

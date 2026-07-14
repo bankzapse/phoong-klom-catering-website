@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
-import { getContent, saveContent, storageMode } from "@/lib/storage";
+import { revalidateTag, revalidatePath } from "next/cache";
+import { readContent, saveContent, storageMode, CONTENT_TAG } from "@/lib/storage";
 import { isAuthed } from "@/lib/auth";
 import { defaultContent } from "@/lib/content";
 
 export const dynamic = "force-dynamic";
 
-// GET → current content (used by the admin editor to prefill)
+// GET → current content, read fresh so the admin editor always shows the latest.
 export async function GET() {
-  const content = await getContent();
+  const content = await readContent();
   return NextResponse.json({ content, storageMode: storageMode() });
 }
 
@@ -33,6 +34,10 @@ export async function PUT(req: Request) {
     const message = err instanceof Error ? err.message : "บันทึกไม่สำเร็จ";
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
+
+  // Bust the cached content so the public site reflects the edit immediately.
+  revalidateTag(CONTENT_TAG);
+  revalidatePath("/");
 
   return NextResponse.json({ ok: true });
 }
