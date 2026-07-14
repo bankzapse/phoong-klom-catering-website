@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-serif: "Noto Serif Thai", "Playfair Display", serif;
+  --font-sans: "Noto Sans Thai", "Prompt", sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: theme("colors.cream.DEFAULT");
+  color: theme("colors.ink.DEFAULT");
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Reveal-on-scroll utility (progressively enhanced via IntersectionObserver) */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Thin gold divider */
+.gold-rule {
+  width: 64px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    theme("colors.gold.DEFAULT"),
+    theme("colors.gold.light")
+  );
+}
+
+/* Subtle grain-free luxury gradient for section headers */
+.text-balance {
+  text-wrap: balance;
+}
+
+::selection {
+  background: theme("colors.gold.DEFAULT");
+  color: #fff;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: theme("colors.cream.deep");
+}
+::-webkit-scrollbar-thumb {
+  background: theme("colors.gold.DEFAULT");
+  border-radius: 6px;
+}
